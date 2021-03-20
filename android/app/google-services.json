@@ -1,0 +1,83 @@
+{
+  "project_info": {
+    "project_number": "902202774868",
+    "firebase_url": "https://driver-observer-default-rtdb.firebaseio.com",
+    "project_id": "driver-observer",
+    "storage_bucket": "driver-observer.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:902202774868:android:62c256021f8d7d1cd6a4c1",
+        "android_client_info": {
+          "package_name": "com.driver.client"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "902202774868-57b7m6504cldh3pjd1oi4c3ppkld6rg8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeEDqQQwX2WCOFzlgmBd7CJM2yE8RMrRg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "902202774868-57b7m6504cldh3pjd1oi4c3ppkld6rg8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "902202774868-k7is1ee2g1gn32f9qi6jsda86q9v2j3j.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "ru.com.driver-observer"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:902202774868:android:88f9ca15319fe53bd6a4c1",
+        "android_client_info": {
+          "package_name": "com.driverclient"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "902202774868-57b7m6504cldh3pjd1oi4c3ppkld6rg8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDeEDqQQwX2WCOFzlgmBd7CJM2yE8RMrRg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "902202774868-57b7m6504cldh3pjd1oi4c3ppkld6rg8.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "902202774868-k7is1ee2g1gn32f9qi6jsda86q9v2j3j.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "ru.com.driver-observer"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
