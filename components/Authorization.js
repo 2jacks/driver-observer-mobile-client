@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {StyleSheet, Text, View, TextInput, Alert, Button} from 'react-native';
 import auth from '@react-native-firebase/auth';
-import Main from './Main';
+import Main from './unMain';
 
 // const firebaseConfig = {
 //   apiKey: 'AIzaSyByruty5exPhybFoEfyLdL_5lRf2cqam9s',

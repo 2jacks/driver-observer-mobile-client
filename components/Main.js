@@ -1,15 +1,16 @@
 import React from 'react';
-import {StyleSheet, Text, View, Alert} from 'react-native';
-import {Button, CheckBox, Image} from 'react-native-elements';
+import {StyleSheet, View} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import database from '@react-native-firebase/database';
-
 import moment from 'moment';
-
-import MapView, {Marker} from 'react-native-maps';
 import BackgroundGeolocation, {
   Location,
 } from '@mauron85/react-native-background-geolocation';
+
+import Map from './Map';
+import OnlineStatusField from './OnlineStatusField';
+import UserInfoField from './UserInfoField';
+import StatusField from './StatusField';
 
 export default class Main extends React.Component {
   constructor(props) {
@@ -21,18 +22,21 @@ export default class Main extends React.Component {
         object: '',
         state: '',
       },
-      onDuty: false,
+      isOnline: false,
       isDriving: false,
       location: {
         longitude: 0,
         latitude: 0,
       },
     };
+
+    this.isOnlineHandler = this.isOnlineHandler.bind(this);
+    this.isDrivingHandler = this.isDrivingHandler.bind(this);
   }
 
-  componentDidMount() {
+  _getUser(uid) {
     database()
-      .ref('drivers/' + this.props.route.params.uid)
+      .ref('drivers/' + uid)
       .once('value')
       .then((snapshot) => {
         if (snapshot.exists()) {
@@ -45,7 +49,34 @@ export default class Main extends React.Component {
       .catch(function (error) {
         console.error(error);
       });
+  }
 
+  isOnlineHandler(isOnline) {
+    this.setState({isOnline: isOnline}, () => {
+      database()
+        .ref('drivers/' + this.state.user.personal.uid + '/state/isOnline')
+        .set(this.state.isOnline)
+        .then(() => {
+          this.state.isOnline
+            ? BackgroundGeolocation.start()
+            : BackgroundGeolocation.stop();
+        });
+    });
+  }
+  isDrivingHandler(isDriving) {
+    this.setState({isDriving: isDriving}, () => {
+      const status = this.state.isDriving ? 'В пути' : 'Перерыв';
+      database()
+        .ref('drivers/' + this.state.user.personal.uid + '/state/status')
+        .set(status);
+      database()
+        .ref('drivers/' + this.state.user.personal.uid + '/state/timestamp')
+        .set(moment().format());
+    });
+  }
+
+  componentDidMount() {
+    this._getUser(this.props.route.params.uid);
     BackgroundGeolocation.configure({
       desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
       stationaryRadius: 30,
@@ -71,136 +102,38 @@ export default class Main extends React.Component {
         location: {lat: location.latitude, lng: location.longitude},
       });
     });
-    BackgroundGeolocation.on('background', () => {
-      Alert.alert('[INFO] App is in background');
-    });
-
-    BackgroundGeolocation.on('foreground', () => {
-      Alert.alert('[INFO] App is in foreground');
-    });
   }
-  componentWillUnmount() {
-    // unregister all event listeners
-    BackgroundGeolocation.removeAllListeners();
+  componentDidUpdate(
+    prevProps: Readonly<P>,
+    prevState: Readonly<S>,
+    snapshot: SS,
+  ) {
+    console.log('is Online: ', this.state.user.state.i);
   }
 
   render() {
     return (
-      <View style={styles.appMain}>
-        <View style={styles.header}>
-          <View style={styles.container}>
-            <View style={styles.headerInner}>
-              <Text style={styles.dutyStatus}>
-                {this.state.isDriving ? 'В пути' : 'Перерыв'}
-              </Text>
-              <View style={styles.user}>
-                <Text style={styles.userName}>
-                  {this.state.user.personal.name}
-                </Text>
-                <Image
-                  style={styles.userAvatar}
-                  PlaceholderContent={<Text>U</Text>}
-                />
-              </View>
-            </View>
-          </View>
+      <View style={styles.mainDiv}>
+        <View style={styles.headerDiv}>
+          <OnlineStatusField
+            toggleHandler={this.isOnlineHandler}
+            uid={this.state.user.personal.uid}
+          />
+          <UserInfoField
+            userStatus={this.state.isDriving}
+            userIsOnline={this.state.isOnline}
+          />
         </View>
-        <View style={styles.main}>
-          <View style={styles.infoPanel}>
-            <CheckBox
-              containerStyle={styles.dutyCheckBox}
-              textStyle={styles.dutyCheckBoxText}
-              checked={this.state.onDuty}
-              // iconType="material"
-              size={36}
-              checkedColor={'red'}
-              checkedTitle={'На смене'}
-              title="Вне смены"
-              onPress={() => {
-                this.setState({
-                  onDuty: !this.state.onDuty,
-                });
-                !this.state.onDuty
-                  ? BackgroundGeolocation.start()
-                  : BackgroundGeolocation.stop();
-              }}
-            />
-          </View>
-          <View style={styles.controls}>
-            <View style={styles.container}>
-              <View style={styles.controlsInner}>
-                <Button
-                  buttonStyle={styles.buttonGo}
-                  containerStyle={styles.buttonContainer}
-                  icon={
-                    <Icon
-                      reverse
-                      name="car"
-                      type="font-awesome"
-                      color="#3B3B3B"
-                      size={20}
-                    />
-                  }
-                  title="В пути"
-                  titleStyle={styles.buttonText}
-                  disabled={this.state.isDriving}
-                  onPress={() => {
-                    this.setState({isDriving: !this.state.isDriving});
-                    database()
-                      .ref(
-                        '/drivers/' + this.state.user.personal.uid + '/state/',
-                      )
-                      .set({
-                        status: 'В пути',
-                        timestamp: moment().format(),
-                      });
-                  }}
-                />
-                <Button
-                  buttonStyle={styles.buttonRest}
-                  icon={
-                    <Icon
-                      reverse
-                      name="anchor"
-                      type="font-awesome"
-                      color="#3B3B3B"
-                      size={20}
-                    />
-                  }
-                  title="Перерыв"
-                  titleStyle={styles.buttonText}
-                  disabled={!this.state.isDriving}
-                  onPress={() => {
-                    this.setState({isDriving: !this.state.isDriving});
-                    database()
-                      .ref(
-                        '/drivers/' + this.state.user.personal.uid + '/state/',
-                      )
-                      .set({
-                        status: 'Перерыв',
-                        timestamp: moment().format(),
-                      });
-                  }}
-                />
-              </View>
-            </View>
-          </View>
-          {/*<View>*/}
-          {/*  <MapView*/}
-          {/*    initialRegion={{*/}
-          {/*      latitude: 54.73,*/}
-          {/*      longitude: 55.95,*/}
-          {/*      latitudeDelta: 0.135,*/}
-          {/*      longitudeDelta: 0.123,*/}
-          {/*    }}*/}
-          {/*    // initialCamera={{latitude: 54.73, longitude: 55.95}}*/}
-          {/*    style={styles.map}*/}
-          {/*    minZoomLevel={10}>*/}
-          {/*    {this.state.onDuty ? (*/}
-          {/*      <Marker coordinate={this.state.location} />*/}
-          {/*    ) : null}*/}
-          {/*  </MapView>*/}
-          {/*</View>*/}
+
+        <View style={styles.mapDiv}>
+          <Map />
+        </View>
+
+        <View style={styles.footerDiv}>
+          <StatusField
+            uid={this.state.user.personal.uid}
+            pressHandler={this.isDrivingHandler}
+          />
         </View>
       </View>
     );
@@ -208,119 +141,30 @@ export default class Main extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  appMain: {
-    backgroundColor: '#fff',
-  },
-  container: {
-    paddingHorizontal: 15,
-  },
-
-  header: {
-    height: 60,
+  mainDiv: {
     width: '100%',
-    borderBottomColor: '#FFE0DB',
-    borderBottomWidth: 1,
-  },
-  headerInner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    height: 60,
-  },
-  burger: {
-    backgroundColor: '#fff',
-  },
-  user: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  userName: {
-    fontSize: 20,
-    fontWeight: '300',
-    color: '#3B3B3B',
-  },
-  userAvatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderColor: '#EC4F43',
-    marginLeft: 10,
-  },
-
-  main: {
-    marginTop: 15,
-  },
-  backgroundGradient: {
     height: '100%',
   },
-
-  infoPanel: {
+  mapDiv: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    zIndex: 0,
+  },
+  headerDiv: {
+    paddingHorizontal: 10,
+    marginTop: 10,
+    zIndex: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    elevation: 6,
-    backgroundColor: '#FFBDB3',
-    paddingRight: 15,
   },
-  dutyCheckBoxWrapper: {
-    elevation: 3,
-    width: '100%',
-  },
-  dutyCheckBox: {
-    backgroundColor: '#FFBDB3',
+  footerDiv: {
+    elevation: 1,
+    position: 'absolute',
+    bottom: 30,
+    paddingHorizontal: 10,
 
-    borderColor: 'transparent',
-  },
-  dutyCheckBoxText: {
-    fontSize: 20,
-    color: '#3B3B3B',
-    fontWeight: '300',
-  },
-  dutyStatus: {
-    fontSize: 20,
-    color: '#3B3B3B',
-    fontWeight: '300',
-  },
-
-  controls: {
-    marginTop: 25,
-    position: 'relative',
-    zIndex: 2,
-    padding: 15,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-
-    elevation: 3,
-  },
-  controlsInner: {
-    paddingVertical: 15,
-  },
-  buttonGo: {
-    height: 60,
     width: '100%',
-    flexDirection: 'row',
-    backgroundColor: '#4FFFA9',
-    marginBottom: 30,
-  },
-  buttonRest: {
-    height: 60,
-    width: '100%',
-    flexDirection: 'row',
-    backgroundColor: '#FFEE82',
-  },
-  buttonText: {
-    fontSize: 24,
-    color: '#3B3B3B',
-    marginLeft: 15,
-    fontWeight: '200',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  map: {
-    width: '100%',
-    height: '100%',
   },
 });
