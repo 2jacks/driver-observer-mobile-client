@@ -78,7 +78,7 @@ export default class Main extends React.Component {
       desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
       stationaryRadius: 30,
       distanceFilter: 30,
-      notificationTitle: 'Background tracking',
+      notificationTitle: 'Driver Client Geolocation',
       notificationText: 'Пока вы на смене - ваше местоположение отслеживается',
       debug: true,
       startOnBoot: false,
