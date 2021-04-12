@@ -104,6 +104,9 @@ export default class Main extends React.Component {
   //   console.log('is Online: ', this.state.isOnline);
   // }
   componentWillUnmount() {
+    BackgroundGeolocation.stop();
+    BackgroundGeolocation.removeAllListeners();
+    this.setState({isOnline: false, isDriving: false});
     database()
       .ref('/drivers/' + this.state.personal.uid + '/state/')
       .update({
