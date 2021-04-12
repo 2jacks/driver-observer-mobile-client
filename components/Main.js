@@ -1,11 +1,9 @@
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
+// import Icon from 'react-native-vector-icons/FontAwesome';
 import database from '@react-native-firebase/database';
 import moment from 'moment';
-import BackgroundGeolocation, {
-  Location,
-} from '@mauron85/react-native-background-geolocation';
+import BackgroundGeolocation from '@mauron85/react-native-background-geolocation';
 
 import Map from './Map';
 import OnlineStatusField from './OnlineStatusField';
@@ -16,12 +14,10 @@ export default class Main extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      user: {
-        personal: '',
-        geo: '',
-        object: '',
-        state: '',
-      },
+      personal: {},
+
+      object: null,
+
       isOnline: false,
       isDriving: false,
       location: {
@@ -36,12 +32,12 @@ export default class Main extends React.Component {
 
   _getUser(uid) {
     database()
-      .ref('drivers/' + uid)
+      .ref('drivers/' + uid + '/personal')
       .once('value')
       .then((snapshot) => {
         if (snapshot.exists()) {
-          this.setState({user: snapshot.val()});
-          console.log(this.state.user);
+          this.setState({personal: snapshot.val()});
+          console.log(this.state);
         } else {
           console.log('No data available');
         }
@@ -54,7 +50,7 @@ export default class Main extends React.Component {
   isOnlineHandler(isOnline) {
     this.setState({isOnline: isOnline}, () => {
       database()
-        .ref('drivers/' + this.state.user.personal.uid + '/state/isOnline')
+        .ref('drivers/' + this.state.personal.uid + '/state/isOnline')
         .set(this.state.isOnline)
         .then(() => {
           this.state.isOnline
@@ -67,22 +63,23 @@ export default class Main extends React.Component {
     this.setState({isDriving: isDriving}, () => {
       const status = this.state.isDriving ? 'В пути' : 'Перерыв';
       database()
-        .ref('drivers/' + this.state.user.personal.uid + '/state/status')
+        .ref('drivers/' + this.state.personal.uid + '/state/status')
         .set(status);
       database()
-        .ref('drivers/' + this.state.user.personal.uid + '/state/timestamp')
+        .ref('drivers/' + this.state.personal.uid + '/state/timestamp')
         .set(moment().format());
     });
   }
 
   componentDidMount() {
+    console.log(this.props.route.params.uid);
     this._getUser(this.props.route.params.uid);
     BackgroundGeolocation.configure({
       desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
       stationaryRadius: 30,
       distanceFilter: 30,
       notificationTitle: 'Background tracking',
-      notificationText: 'enabled',
+      notificationText: 'Пока вы на смене - ваше местоположение отслеживается',
       debug: true,
       startOnBoot: false,
       stopOnTerminate: true,
@@ -93,7 +90,7 @@ export default class Main extends React.Component {
     });
     BackgroundGeolocation.on('location', (location) => {
       database()
-        .ref('/drivers/' + this.state.user.personal.uid + '/geo/location/')
+        .ref('/drivers/' + this.state.personal.uid + '/state/geo/')
         .set({
           lat: location.latitude,
           long: location.longitude,
@@ -103,22 +100,24 @@ export default class Main extends React.Component {
       });
     });
   }
-  componentDidUpdate(
-    prevProps: Readonly<P>,
-    prevState: Readonly<S>,
-    snapshot: SS,
-  ) {
-    console.log('is Online: ', this.state.user.state.i);
+  // componentDidUpdate() {
+  //   console.log('is Online: ', this.state.isOnline);
+  // }
+  componentWillUnmount() {
+    database()
+      .ref('/drivers/' + this.state.personal.uid + '/state/')
+      .update({
+        isOnline: false,
+        status: 'Перерыв',
+        timestamp: moment().format(),
+      });
   }
 
   render() {
     return (
       <View style={styles.mainDiv}>
         <View style={styles.headerDiv}>
-          <OnlineStatusField
-            toggleHandler={this.isOnlineHandler}
-            uid={this.state.user.personal.uid}
-          />
+          <OnlineStatusField toggleHandler={this.isOnlineHandler} />
           <UserInfoField
             userStatus={this.state.isDriving}
             userIsOnline={this.state.isOnline}
@@ -130,10 +129,7 @@ export default class Main extends React.Component {
         </View>
 
         <View style={styles.footerDiv}>
-          <StatusField
-            uid={this.state.user.personal.uid}
-            pressHandler={this.isDrivingHandler}
-          />
+          <StatusField pressHandler={this.isDrivingHandler} />
         </View>
       </View>
     );

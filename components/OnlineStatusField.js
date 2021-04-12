@@ -1,7 +1,7 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {Switch, Text, View, StyleSheet} from 'react-native';
 
-export default function OnlineStatusField({toggleHandler, uid}) {
+export default function OnlineStatusField({toggleHandler}) {
   const [isEnabled, setIsEnabled] = useState(false);
 
   const toggleSwitch = () => {
