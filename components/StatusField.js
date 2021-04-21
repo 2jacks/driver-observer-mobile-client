@@ -1,40 +1,50 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Pressable, Text, View, StyleSheet} from 'react-native';
 
-export default function StatusField({pressHandler}) {
+export default function StatusField(props) {
   const [isDriving, setIsDriving] = useState(false);
+  useEffect(() => {
+    console.log(props.isOnline);
+    if (props.isOnline === false) {
+      setIsDriving(false);
+    }
+  }, [props.isOnline]);
 
   function toggleStatus() {
     setIsDriving((prevState) => {
-      pressHandler(!prevState);
+      props.pressHandler(!prevState);
       return !prevState;
     });
   }
 
-  return (
-    <View style={styles.statusField}>
-      <Pressable
-        style={
-          !isDriving
-            ? {...styles.pressable, backgroundColor: '#4FFFA9'}
-            : {...styles.pressable, backgroundColor: '#E9E9E9'}
-        }
-        onPress={toggleStatus}
-        disabled={isDriving}>
-        <Text>В пути</Text>
-      </Pressable>
-      <Pressable
-        style={
-          isDriving
-            ? {...styles.pressable, backgroundColor: '#FFEE82'}
-            : {...styles.pressable, backgroundColor: '#E9E9E9'}
-        }
-        onPress={toggleStatus}
-        disabled={!isDriving}>
-        <Text>Перерыв</Text>
-      </Pressable>
-    </View>
-  );
+  if (props.isOnline) {
+    return (
+      <View style={styles.statusField}>
+        <Pressable
+          style={
+            !isDriving
+              ? {...styles.pressable, backgroundColor: '#E9E9E9'}
+              : {...styles.pressable, backgroundColor: '#4FFFA9'}
+          }
+          onPress={toggleStatus}
+          disabled={isDriving}>
+          <Text>В пути</Text>
+        </Pressable>
+        <Pressable
+          style={
+            isDriving
+              ? {...styles.pressable, backgroundColor: '#E9E9E9'}
+              : {...styles.pressable, backgroundColor: '#FFEE82'}
+          }
+          onPress={toggleStatus}
+          disabled={!isDriving}>
+          <Text>Перерыв</Text>
+        </Pressable>
+      </View>
+    );
+  } else {
+    return null;
+  }
 }
 
 const styles = StyleSheet.create({

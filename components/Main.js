@@ -49,14 +49,39 @@ export default class Main extends React.Component {
 
   isOnlineHandler(isOnline) {
     this.setState({isOnline: isOnline}, () => {
-      database()
-        .ref('drivers/' + this.state.personal.uid + '/state/isOnline')
-        .set(this.state.isOnline)
-        .then(() => {
-          this.state.isOnline
-            ? BackgroundGeolocation.start()
-            : BackgroundGeolocation.stop();
-        });
+      if (!this.state.isOnline) {
+        this.setState({isDriving: false});
+        database()
+          .ref('drivers/' + this.state.personal.uid + '/state')
+          .update({
+            isOnline: false,
+            status: 'Смена закончена',
+            timestamp: moment().format(),
+          })
+          .then(() => {
+            BackgroundGeolocation.stop();
+          });
+      } else {
+        database()
+          .ref('drivers/' + this.state.personal.uid + '/state')
+          .update({
+            isOnline: false,
+            status: 'Заступил на смену',
+            timestamp: moment().format(),
+          })
+          .then(() => {
+            BackgroundGeolocation.start();
+          });
+      }
+      //   database()
+      //     .ref('drivers/' + this.state.personal.uid + '/state/isOnline')
+      //     .set(this.state.isOnline)
+      //     .then(() => {
+      //       this.state.isOnline
+      //         ?
+      //         : BackgroundGeolocation.stop();
+      //     });
+      // });
     });
   }
   isDrivingHandler(isDriving) {
@@ -72,7 +97,6 @@ export default class Main extends React.Component {
   }
 
   componentDidMount() {
-    console.log(this.props.route.params.uid);
     this._getUser(this.props.route.params.uid);
     BackgroundGeolocation.configure({
       desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
@@ -88,20 +112,39 @@ export default class Main extends React.Component {
       fastestInterval: 5000,
       activitiesInterval: 10000,
     });
-    BackgroundGeolocation.on('location', (location) => {
-      database()
-        .ref('/drivers/' + this.state.personal.uid + '/state/geo/')
-        .set({
-          lat: location.latitude,
-          long: location.longitude,
+    BackgroundGeolocation.on(
+      'location',
+      (location) => {
+        database()
+          .ref('/drivers/' + this.state.personal.uid + '/state/geo/')
+          .set({
+            lat: location.latitude,
+            long: location.longitude,
+            speed: location.speed,
+          });
+        this.setState({
+          location: {lat: location.latitude, lng: location.longitude},
         });
-      this.setState({
-        location: {lat: location.latitude, lng: location.longitude},
-      });
-    });
+      },
+      () => {
+        fetch('https://mywebsite.com/endpoint/', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            uid: this.state.uid,
+            location: this.state.location,
+            speed: this.state.speed,
+          }),
+        });
+      },
+    );
   }
   // componentDidUpdate() {
   //   console.log('is Online: ', this.state.isOnline);
+  //   console.log('status', this.state.isDriving);
   // }
   componentWillUnmount() {
     BackgroundGeolocation.stop();
@@ -111,7 +154,7 @@ export default class Main extends React.Component {
       .ref('/drivers/' + this.state.personal.uid + '/state/')
       .update({
         isOnline: false,
-        status: 'Перерыв',
+        status: 'Смена закончена',
         timestamp: moment().format(),
       });
   }
@@ -132,7 +175,10 @@ export default class Main extends React.Component {
         </View>
 
         <View style={styles.footerDiv}>
-          <StatusField pressHandler={this.isDrivingHandler} />
+          <StatusField
+            pressHandler={this.isDrivingHandler}
+            isOnline={this.state.isOnline}
+          />
         </View>
       </View>
     );

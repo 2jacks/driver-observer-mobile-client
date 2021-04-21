@@ -2,6 +2,14 @@ import React from 'react';
 import {View, Text, StyleSheet} from 'react-native';
 
 export default function UserInfoField(props) {
+  let status;
+  if (!props.userIsOnline) {
+    status = 'Перерыв';
+  } else if (props.userStatus) {
+    status = 'В пути';
+  } else {
+    status = 'Перерыв';
+  }
   return (
     <View style={styles.userInfoField}>
       <View
@@ -10,9 +18,7 @@ export default function UserInfoField(props) {
           backgroundColor: props.userIsOnline ? '#4FFFA9' : '#EC4F43',
         }}
       />
-      <Text style={styles.userStatus}>
-        {props.userStatus ? 'В пути' : 'Перерыв'}
-      </Text>
+      <Text style={styles.userStatus}>{status}</Text>
       <View style={styles.userAvatar} />
     </View>
   );
