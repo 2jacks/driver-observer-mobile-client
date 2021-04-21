@@ -4,7 +4,6 @@ import {Pressable, Text, View, StyleSheet} from 'react-native';
 export default function StatusField(props) {
   const [isDriving, setIsDriving] = useState(false);
   useEffect(() => {
-    console.log(props.isOnline);
     if (props.isOnline === false) {
       setIsDriving(false);
     }

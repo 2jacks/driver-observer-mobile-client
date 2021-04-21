@@ -3,10 +3,43 @@ import {StyleSheet, Text, View, TextInput, Alert, Button} from 'react-native';
 import auth from '@react-native-firebase/auth';
 
 export default function Authorization({navigation}) {
-  const [email, setEmail] = useState('anton.nozdrin.21@gmail.com');
-  const [password, setPassword] = useState('315220kalter');
+  const [email, setEmail] = useState('essent1al26@yandex.ru');
+  const [token, setToken] = useState(null);
+  const [driver, setDriver] = useState(null);
+  const [password, setPassword] = useState('12345');
 
-  function signInWithEmailAndPass() {
+  async function signInWithEmailAndPass() {
+    console.log(email, password);
+    fetch('http://www.webapiroads.somee.com/api/account/login', {
+      method: 'POST',
+      headers: {
+        Accept: '*/*',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password,
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw Error(res.statusText);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        console.log(data.data.user.id);
+        if (data.data.message === 'Авторизован') {
+          navigation.navigate('Main', {
+            accessToken: data.data.accessToken,
+            id: data.data.user.id,
+            email: email,
+            password: password,
+          });
+        }
+      })
+      .catch((error) => console.log(error));
+
     // auth()
     //   .signInWithEmailAndPassword(email, password)
     //   .then((userCredential) => {
