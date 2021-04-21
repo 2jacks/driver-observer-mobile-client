@@ -15,10 +15,10 @@ export default class Main extends React.Component {
     super(props);
     this.state = {
       data: {
-        accessToken: this.props.accessToken,
-        id: this.props.user.id,
-        email: this.props.email,
-        password: this.props.password,
+        accessToken: null,
+        id: null,
+        email: null,
+        password: null,
       },
       personal: {},
 
@@ -55,6 +55,13 @@ export default class Main extends React.Component {
 
   isOnlineHandler(isOnline) {
     this.setState({isOnline: isOnline}, () => {
+      console.log('isOnline', this.state.isOnline);
+      if (this.state.isOnline) {
+        BackgroundGeolocation.start();
+      }
+      if (!this.state.isOnline) {
+        BackgroundGeolocation.stop();
+      }
       // if (!this.state.isOnline) {
       //   this.setState({isDriving: false});
       //   database()
@@ -103,7 +110,7 @@ export default class Main extends React.Component {
   }
 
   componentDidMount() {
-    // this._getUser(this.props.route.params.uid);
+    this.setState({data: this.props.route.params});
     BackgroundGeolocation.configure({
       desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
       stationaryRadius: 30,
@@ -119,37 +126,33 @@ export default class Main extends React.Component {
       activitiesInterval: 10000,
     });
     BackgroundGeolocation.on('location', (location) => {
-      // database()
-      //   .ref('/drivers/' + this.state.personal.uid + '/state/geo/')
-      //   .set({
-      //     lat: location.latitude,
-      //     long: location.longitude,
-      //     speed: location.speed,
-      //   });
+      console.log(location);
       this.setState({
         location: {lat: location.latitude, lng: location.longitude},
       });
-      fetch('https://mywebsite.com/endpoint/', {
+      database().ref('drivers/v2NLAYVwvzcTbnSN9lK2U4ADWPE2/state/geo/').update({
+        lat: location.latitude,
+        lng: location.longitude,
+      });
+      fetch('http://www.webapiroads.somee.com/api/routes/insertpoint', {
         method: 'POST',
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          Id: this.state.data,
+          // Id: this.state.data.id,
           RouteId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-          Lat: 0,
-          Lng: 0,
-          Speed: 0,
+          lat: location.latitude,
+          lng: location.longitude,
+          speed: location.speed,
         }),
       });
     });
   }
-  componentDidUpdate() {
-    // console.log('is Online: ', this.state.isOnline);
-    // console.log('status', this.state.isDriving);
-    console.log(this.state.data);
-  }
+  // componentDidUpdate() {
+  //   console.log('state', this.state.data);
+  // }
   componentWillUnmount() {
     BackgroundGeolocation.stop();
     BackgroundGeolocation.removeAllListeners();
