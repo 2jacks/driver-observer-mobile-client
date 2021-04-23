@@ -125,22 +125,7 @@ export default class Main extends React.Component {
         this.setState({
           location: {lat: location.latitude, lng: location.longitude},
         });
-      },
-      () => {
-        fetch('https://mywebsite.com/endpoint/', {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            uid: this.state.uid,
-            location: this.state.location,
-            speed: this.state.speed,
-          }),
-        });
-      },
-    );
+      });
   }
   // componentDidUpdate() {
   //   console.log('is Online: ', this.state.isOnline);
