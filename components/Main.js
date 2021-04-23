@@ -73,15 +73,6 @@ export default class Main extends React.Component {
             BackgroundGeolocation.start();
           });
       }
-      //   database()
-      //     .ref('drivers/' + this.state.personal.uid + '/state/isOnline')
-      //     .set(this.state.isOnline)
-      //     .then(() => {
-      //       this.state.isOnline
-      //         ?
-      //         : BackgroundGeolocation.stop();
-      //     });
-      // });
     });
   }
   isDrivingHandler(isDriving) {
@@ -107,7 +98,7 @@ export default class Main extends React.Component {
       debug: true,
       startOnBoot: false,
       stopOnTerminate: true,
-      locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
+      locationProvider: BackgroundGeolocation.DISTANCE_FILTER_PROVIDER,
       interval: 3000,
       fastestInterval: 5000,
       activitiesInterval: 10000,
