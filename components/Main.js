@@ -14,6 +14,7 @@ export default class Main extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      uid: this.props.route.params.uid,
       personal: {},
 
       object: null,
@@ -24,6 +25,7 @@ export default class Main extends React.Component {
         longitude: 0,
         latitude: 0,
       },
+      route: [],
     };
 
     this.isOnlineHandler = this.isOnlineHandler.bind(this);
@@ -52,7 +54,7 @@ export default class Main extends React.Component {
       if (!this.state.isOnline) {
         this.setState({isDriving: false});
         database()
-          .ref('drivers/' + this.state.personal.uid + '/state')
+          .ref('drivers/' + this.state.uid + '/state')
           .update({
             isOnline: false,
             status: 'Смена закончена',
@@ -63,7 +65,7 @@ export default class Main extends React.Component {
           });
       } else {
         database()
-          .ref('drivers/' + this.state.personal.uid + '/state')
+          .ref('drivers/' + this.state.uid + '/state')
           .update({
             isOnline: false,
             status: 'Заступил на смену',
@@ -75,14 +77,15 @@ export default class Main extends React.Component {
       }
     });
   }
+
   isDrivingHandler(isDriving) {
     this.setState({isDriving: isDriving}, () => {
       const status = this.state.isDriving ? 'В пути' : 'Перерыв';
       database()
-        .ref('drivers/' + this.state.personal.uid + '/state/status')
+        .ref('drivers/' + this.state.uid + '/state/status')
         .set(status);
       database()
-        .ref('drivers/' + this.state.personal.uid + '/state/timestamp')
+        .ref('drivers/' + this.state.uid + '/state/timestamp')
         .set(moment().format());
     });
   }
@@ -103,21 +106,28 @@ export default class Main extends React.Component {
       fastestInterval: 5000,
       activitiesInterval: 10000,
     });
-    BackgroundGeolocation.on(
-      'location',
-      (location) => {
-        database()
-          .ref('/drivers/' + this.state.personal.uid + '/state/geo/')
-          .set({
-            lat: location.latitude,
-            long: location.longitude,
-            speed: location.speed,
-          });
-        this.setState({
-          location: {lat: location.latitude, lng: location.longitude},
-        });
-      });
+    BackgroundGeolocation.on('location', (location) => {
+      this.setState(
+        {
+          location: {
+            latitude: location.latitude,
+            longitude: location.longitude,
+          },
+          route: [...this.state.route, location],
+        },
+        () => {
+          database()
+            .ref('/drivers/' + this.state.uid + '/state/geo/')
+            .set({
+              lat: location.latitude,
+              lng: location.longitude,
+              speed: location.speed,
+            });
+        },
+      );
+    });
   }
+
   // componentDidUpdate() {
   //   console.log('is Online: ', this.state.isOnline);
   //   console.log('status', this.state.isDriving);
@@ -125,14 +135,14 @@ export default class Main extends React.Component {
   componentWillUnmount() {
     BackgroundGeolocation.stop();
     BackgroundGeolocation.removeAllListeners();
-    this.setState({isOnline: false, isDriving: false});
-    database()
-      .ref('/drivers/' + this.state.personal.uid + '/state/')
-      .update({
-        isOnline: false,
-        status: 'Смена закончена',
-        timestamp: moment().format(),
-      });
+    // this.setState({isOnline: false, isDriving: false});
+    // database()
+    //   .ref('/drivers/' + this.state.personal.uid + '/state/')
+    //   .update({
+    //     isOnline: false,
+    //     status: 'Смена закончена',
+    //     timestamp: moment().format(),
+    //   });
   }
 
   render() {
@@ -147,7 +157,11 @@ export default class Main extends React.Component {
         </View>
 
         <View style={styles.mapDiv}>
-          <Map />
+          <Map
+            isOnline={this.state.isOnline}
+            location={this.state.location}
+            route={this.state.route}
+          />
         </View>
 
         <View style={styles.footerDiv}>
