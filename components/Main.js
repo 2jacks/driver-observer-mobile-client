@@ -121,19 +121,15 @@ export default class Main extends React.Component {
       startOnBoot: false,
       stopOnTerminate: true,
       locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
-      interval: 3000,
-      fastestInterval: 5000,
-      activitiesInterval: 10000,
+      interval: 10000,
+      fastestInterval: 10000,
+      activitiesInterval: 20000,
     });
     BackgroundGeolocation.on('location', (location) => {
-      // console.log(location);
+      console.log(location.latitude, location.longitude);
       this.setState({
         location: {lat: location.latitude, lng: location.longitude},
       });
-      // database().ref('drivers/v2NLAYVwvzcTbnSN9lK2U4ADWPE2/state/geo/').update({
-      //   lat: location.latitude,
-      //   lng: location.longitude,
-      // });
       fetch(
         `http://www.webapiroads.somee.com/api/routes/getroute?driverId=${this.state.data.id}`,
       )
@@ -163,14 +159,6 @@ export default class Main extends React.Component {
   componentWillUnmount() {
     BackgroundGeolocation.stop();
     BackgroundGeolocation.removeAllListeners();
-    // this.setState({isOnline: false, isDriving: false});
-    // database()
-    //   .ref('/drivers/' + this.state.personal.uid + '/state/')
-    //   .update({
-    //     isOnline: false,
-    //     status: 'Смена закончена',
-    //     timestamp: moment().format(),
-    //   });
   }
 
   render() {

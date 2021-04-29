@@ -1,11 +1,8 @@
 import React, {useState} from 'react';
-import {StyleSheet, Text, View, TextInput, Alert, Button} from 'react-native';
-import auth from '@react-native-firebase/auth';
+import {StyleSheet, Text, View, TextInput, Button} from 'react-native';
 
 export default function Authorization({navigation}) {
   const [email, setEmail] = useState('essent1al26@yandex.ru');
-  const [token, setToken] = useState(null);
-  const [driver, setDriver] = useState(null);
   const [password, setPassword] = useState('12345');
 
   async function signInWithEmailAndPass() {
@@ -39,26 +36,6 @@ export default function Authorization({navigation}) {
         }
       })
       .catch((error) => console.log(error));
-
-    // auth()
-    //   .signInWithEmailAndPassword(email, password)
-    //   .then((userCredential) => {
-    //     navigation.navigate('Main', {
-    //       uid: userCredential.user.uid,
-    //       email: email,
-    //       password: password,
-    //     });
-    //   })
-    //   .catch((error) => {
-    //     if (error.code === 'auth/email-already-in-use') {
-    //       Alert.alert('That email address is already in use!');
-    //     }
-    //     if (error.code === 'auth/invalid-email') {
-    //       Alert.alert('That email address is invalid!');
-    //     }
-    //     console.error(error);
-    //     Alert.alert('Something went wrong :-(');
-    //   });
   }
 
   return (
