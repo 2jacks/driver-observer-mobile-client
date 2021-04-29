@@ -36,26 +36,26 @@ export default class Main extends React.Component {
     this.isDrivingHandler = this.isDrivingHandler.bind(this);
   }
 
-  _getUser(uid) {
-    database()
-      .ref('drivers/' + uid + '/personal')
-      .once('value')
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          this.setState({personal: snapshot.val()});
-          console.log(this.state);
-        } else {
-          console.log('No data available');
-        }
-      })
-      .catch(function (error) {
-        console.error(error);
-      });
-  }
+  // _getUser(uid) {
+  //   database()
+  //     .ref('drivers/' + uid + '/personal')
+  //     .once('value')
+  //     .then((snapshot) => {
+  //       if (snapshot.exists()) {
+  //         this.setState({personal: snapshot.val()});
+  //         console.log(this.state);
+  //       } else {
+  //         console.log('No data available');
+  //       }
+  //     })
+  //     .catch(function (error) {
+  //       console.error(error);
+  //     });
+  // }
 
   isOnlineHandler(isOnline) {
     this.setState({isOnline: isOnline}, () => {
-      console.log('isOnline', this.state.isOnline);
+      console.log('main-isOnline', this.state.isOnline);
       if (this.state.isOnline) {
         BackgroundGeolocation.start();
       }
@@ -126,28 +126,35 @@ export default class Main extends React.Component {
       activitiesInterval: 10000,
     });
     BackgroundGeolocation.on('location', (location) => {
-      console.log(location);
+      // console.log(location);
       this.setState({
         location: {lat: location.latitude, lng: location.longitude},
       });
-      database().ref('drivers/v2NLAYVwvzcTbnSN9lK2U4ADWPE2/state/geo/').update({
-        lat: location.latitude,
-        lng: location.longitude,
-      });
-      fetch('http://www.webapiroads.somee.com/api/routes/insertpoint', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          // Id: this.state.data.id
-          RouteId: '3fa85f64-5717-4562-b3fc-2c963f66afa6',
-          lat: location.latitude,
-          lng: location.longitude,
-          speed: location.speed,
-        }),
-      });
+      // database().ref('drivers/v2NLAYVwvzcTbnSN9lK2U4ADWPE2/state/geo/').update({
+      //   lat: location.latitude,
+      //   lng: location.longitude,
+      // });
+      fetch(
+        `http://www.webapiroads.somee.com/api/routes/getroute?driverId=${this.state.data.id}`,
+      )
+        .then((res) => {
+          return res.json();
+        })
+        .then((data) => {
+          fetch('http://www.webapiroads.somee.com/api/routes/insertpoint', {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              RouteId: data.id,
+              lat: location.latitude,
+              lng: location.longitude,
+              speed: location.speed,
+            }),
+          });
+        });
     });
   }
   // componentDidUpdate() {
@@ -156,7 +163,7 @@ export default class Main extends React.Component {
   componentWillUnmount() {
     BackgroundGeolocation.stop();
     BackgroundGeolocation.removeAllListeners();
-    this.setState({isOnline: false, isDriving: false});
+    // this.setState({isOnline: false, isDriving: false});
     // database()
     //   .ref('/drivers/' + this.state.personal.uid + '/state/')
     //   .update({

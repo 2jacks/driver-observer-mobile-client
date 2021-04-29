@@ -28,7 +28,7 @@ export default function Authorization({navigation}) {
         return res.json();
       })
       .then((data) => {
-        console.log(data.data.user.id);
+        console.log(data.data);
         if (data.data.message === 'Авторизован') {
           navigation.navigate('Main', {
             accessToken: data.data.accessToken,
