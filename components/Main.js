@@ -1,5 +1,5 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import {StyleSheet, View, Alert} from 'react-native';
 // import Icon from 'react-native-vector-icons/FontAwesome';
 import database from '@react-native-firebase/database';
 import moment from 'moment';
@@ -39,13 +39,12 @@ export default class Main extends React.Component {
       .then((snapshot) => {
         if (snapshot.exists()) {
           this.setState({personal: snapshot.val()});
-          console.log(this.state);
         } else {
-          console.log('No data available');
+          Alert.alert('No data available');
         }
       })
       .catch(function (error) {
-        console.error(error);
+        Alert.alert(error);
       });
   }
 
