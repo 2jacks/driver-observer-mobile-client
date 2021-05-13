@@ -66,7 +66,7 @@ export default class Main extends React.Component {
         database()
           .ref('drivers/' + this.state.uid + '/state')
           .update({
-            isOnline: false,
+            isOnline: true,
             status: 'Заступил на смену',
             timestamp: moment().format(),
           })
