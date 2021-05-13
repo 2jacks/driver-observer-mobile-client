@@ -1,12 +1,21 @@
 import React from 'react';
 import {StyleSheet} from 'react-native';
-import MapView, {Marker} from 'react-native-maps';
-import {View} from 'react-native';
+import MapView, {Marker, Polyline} from 'react-native-maps';
 
 export default class Map extends React.Component {
   constructor(props) {
     super(props);
   }
+
+  componentDidUpdate(
+    prevProps: Readonly<P>,
+    prevState: Readonly<S>,
+    snapshot: SS,
+  ) {
+    console.log('Map is online', this.props.isOnline);
+    console.log('Map latlng', this.props.location);
+  }
+
   render() {
     return (
       <MapView
@@ -16,12 +25,23 @@ export default class Map extends React.Component {
           latitudeDelta: 0.135,
           longitudeDelta: 0.123,
         }}
-        // initialCamera={{latitude: 54.73, longitude: 55.95}}
         style={styles.map}
         minZoomLevel={10}>
-        {/* {this.state.onDuty ? (
-                <Marker coordinate={this.state.location} />
-              ) : null} */}
+        {this.props.isOnline ? (
+          <Marker
+            coordinate={{
+              latitude: this.props.location.latitude,
+              longitude: this.props.location.longitude,
+            }}
+          />
+        ) : null}
+        {this.props.isOnline ? (
+          <Polyline
+            coordinates={this.props.route}
+            strokeColor={'#fe7968'}
+            strokeWidth={5}
+          />
+        ) : null}
       </MapView>
     );
   }

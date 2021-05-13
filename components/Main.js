@@ -1,7 +1,5 @@
 import React from 'react';
-import {StyleSheet, View} from 'react-native';
-// import Icon from 'react-native-vector-icons/FontAwesome';
-import database from '@react-native-firebase/database';
+import {StyleSheet, View, TouchableOpacity, Text} from 'react-native';
 import moment from 'moment';
 import BackgroundGeolocation from '@mauron85/react-native-background-geolocation';
 
@@ -30,6 +28,7 @@ export default class Main extends React.Component {
         longitude: 0,
         latitude: 0,
       },
+      route: [],
     };
 
     this.isOnlineHandler = this.isOnlineHandler.bind(this);
@@ -98,37 +97,39 @@ export default class Main extends React.Component {
     });
   }
   isDrivingHandler(isDriving) {
-    this.setState({isDriving: isDriving}, () => {
-      const status = this.state.isDriving ? 'В пути' : 'Перерыв';
-      database()
-        .ref('drivers/' + this.state.personal.uid + '/state/status')
-        .set(status);
-      database()
-        .ref('drivers/' + this.state.personal.uid + '/state/timestamp')
-        .set(moment().format());
-    });
+    this.setState({isDriving: isDriving});
+    // this.setState({isDriving: isDriving}, () => {
+    //   const status = this.state.isDriving ? 'В пути' : 'Перерыв';
+    //   database()
+    //     .ref('drivers/' + this.state.personal.uid + '/state/status')
+    //     .set(status);
+    //   database()
+    //     .ref('drivers/' + this.state.personal.uid + '/state/timestamp')
+    //     .set(moment().format());
+    // });
   }
 
   componentDidMount() {
     this.setState({data: this.props.route.params});
     BackgroundGeolocation.configure({
       desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
-      stationaryRadius: 30,
-      distanceFilter: 30,
-      notificationTitle: 'Driver Client',
+      stationaryRadius: 15,
+      distanceFilter: 15,
+      notificationTitle: 'Driver Distance Short',
       notificationText: 'Пока вы на смене - ваше местоположение отслеживается',
-      debug: true,
+      debug: false,
       startOnBoot: false,
       stopOnTerminate: true,
-      locationProvider: BackgroundGeolocation.ACTIVITY_PROVIDER,
-      interval: 10000,
-      fastestInterval: 10000,
+      locationProvider: BackgroundGeolocation.DISTANCE_FILTER_PROVIDER,
+      interval: 5000,
+      fastestInterval: 5000,
       activitiesInterval: 20000,
     });
     BackgroundGeolocation.on('location', (location) => {
       console.log(location.latitude, location.longitude);
       this.setState({
-        location: {lat: location.latitude, lng: location.longitude},
+        location: {latitude: location.latitude, longitude: location.longitude},
+        route: [...this.state.route, location],
       });
       fetch(
         `http://www.webapiroads.somee.com/api/routes/getroute?driverId=${this.state.data.id}`,
@@ -153,9 +154,6 @@ export default class Main extends React.Component {
         });
     });
   }
-  // componentDidUpdate() {
-  //   console.log('state', this.state.data);
-  // }
   componentWillUnmount() {
     BackgroundGeolocation.stop();
     BackgroundGeolocation.removeAllListeners();
@@ -173,8 +171,16 @@ export default class Main extends React.Component {
         </View>
 
         <View style={styles.mapDiv}>
-          <Map />
+          <Map
+            isOnline={this.state.isOnline}
+            location={this.state.location}
+            route={this.state.route}
+          />
         </View>
+
+        <TouchableOpacity style={styles.sosButton}>
+          <Text style={{fontSize: 24, color: '#ec4f43'}}>SOS</Text>
+        </TouchableOpacity>
 
         <View style={styles.footerDiv}>
           <StatusField
@@ -213,5 +219,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
 
     width: '100%',
+  },
+  sosButton: {
+    marginTop: 50,
+    marginLeft: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    borderRadius: 30,
+    backgroundColor: '#fff',
+    elevation: 1,
+    width: 70,
+    justifyContent: 'center',
   },
 });
