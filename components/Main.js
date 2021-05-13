@@ -128,21 +128,9 @@ export default class Main extends React.Component {
     });
   }
 
-  // componentDidUpdate() {
-  //   console.log('is Online: ', this.state.isOnline);
-  //   console.log('status', this.state.isDriving);
-  // }
   componentWillUnmount() {
     BackgroundGeolocation.stop();
     BackgroundGeolocation.removeAllListeners();
-    // this.setState({isOnline: false, isDriving: false});
-    // database()
-    //   .ref('/drivers/' + this.state.personal.uid + '/state/')
-    //   .update({
-    //     isOnline: false,
-    //     status: 'Смена закончена',
-    //     timestamp: moment().format(),
-    //   });
   }
 
   render() {
