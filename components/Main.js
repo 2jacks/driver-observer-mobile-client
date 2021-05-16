@@ -33,80 +33,76 @@ export default class Main extends React.Component {
 
     this.isOnlineHandler = this.isOnlineHandler.bind(this);
     this.isDrivingHandler = this.isDrivingHandler.bind(this);
+    this.sosHandler = this.sosHandler.bind(this);
   }
-
-  // _getUser(uid) {
-  //   database()
-  //     .ref('drivers/' + uid + '/personal')
-  //     .once('value')
-  //     .then((snapshot) => {
-  //       if (snapshot.exists()) {
-  //         this.setState({personal: snapshot.val()});
-  //         console.log(this.state);
-  //       } else {
-  //         console.log('No data available');
-  //       }
-  //     })
-  //     .catch(function (error) {
-  //       console.error(error);
-  //     });
-  // }
 
   isOnlineHandler(isOnline) {
     this.setState({isOnline: isOnline}, () => {
       console.log('main-isOnline', this.state.isOnline);
       if (this.state.isOnline) {
         BackgroundGeolocation.start();
+        fetch(
+          `http://www.webapiroads.somee.com/api/account/${this.state.data.id}/setonline/true`,
+        )
+          .then((response) => response.json())
+          .then((json) => {
+            console.log('isonline-server-res', json.data);
+            return json.data;
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       }
       if (!this.state.isOnline) {
         BackgroundGeolocation.stop();
+        fetch(
+          `http://www.webapiroads.somee.com/api/account/${this.state.data.id}/setonline/false`,
+        )
+          .then((response) => response.json())
+          .then((json) => {
+            console.log('isonline-server-res', json.data);
+            return json.data;
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       }
-      // if (!this.state.isOnline) {
-      //   this.setState({isDriving: false});
-      //   database()
-      //     .ref('drivers/' + this.state.personal.uid + '/state')
-      //     .update({
-      //       isOnline: false,
-      //       status: 'Смена закончена',
-      //       timestamp: moment().format(),
-      //     })
-      //     .then(() => {
-      //       BackgroundGeolocation.stop();
-      //     });
-      // } else {
-      //   database()
-      //     .ref('drivers/' + this.state.personal.uid + '/state')
-      //     .update({
-      //       isOnline: false,
-      //       status: 'Заступил на смену',
-      //       timestamp: moment().format(),
-      //     })
-      //     .then(() => {
-      //       BackgroundGeolocation.start();
-      //     });
-      // }
-      //   database()
-      //     .ref('drivers/' + this.state.personal.uid + '/state/isOnline')
-      //     .set(this.state.isOnline)
-      //     .then(() => {
-      //       this.state.isOnline
-      //         ?
-      //         : BackgroundGeolocation.stop();
-      //     });
-      // });
     });
   }
   isDrivingHandler(isDriving) {
-    this.setState({isDriving: isDriving});
-    // this.setState({isDriving: isDriving}, () => {
-    //   const status = this.state.isDriving ? 'В пути' : 'Перерыв';
-    //   database()
-    //     .ref('drivers/' + this.state.personal.uid + '/state/status')
-    //     .set(status);
-    //   database()
-    //     .ref('drivers/' + this.state.personal.uid + '/state/timestamp')
-    //     .set(moment().format());
-    // });
+    this.setState({isDriving: isDriving}, () => {
+      const status = this.state.isDriving ? 'on_the_way' : 'rest';
+      fetch(
+        `http://www.webapiroads.somee.com/api/driver/${this.state.data.id}/setstatusdriver/${status}`,
+      )
+        .then((response) => {
+          console.log(response);
+          return response.json();
+        })
+        .then((json) => {
+          console.log('status-server-res', json, json.data);
+          return json.data;
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    });
+  }
+  sosHandler() {
+    fetch(
+      `http://www.webapiroads.somee.com/api/driver/${this.state.data.id}/setstatusdriver/SOS`,
+    )
+      .then((response) => {
+        console.log(response);
+        return response.json();
+      })
+      .then((json) => {
+        console.log('status-server-res', json, json.data);
+        return json.data;
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   componentDidMount() {
@@ -178,7 +174,7 @@ export default class Main extends React.Component {
           />
         </View>
 
-        <TouchableOpacity style={styles.sosButton}>
+        <TouchableOpacity style={styles.sosButton} onPress={this.sosHandler}>
           <Text style={{fontSize: 24, color: '#ec4f43'}}>SOS</Text>
         </TouchableOpacity>
 
