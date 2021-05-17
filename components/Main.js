@@ -33,7 +33,7 @@ export default class Main extends React.Component {
 
     this.isOnlineHandler = this.isOnlineHandler.bind(this);
     this.isDrivingHandler = this.isDrivingHandler.bind(this);
-    this.sosHandler = this.sosHandler.bind(this);
+    this.exclusiveStatusHandler = this.exclusiveStatusHandler.bind(this);
   }
 
   isOnlineHandler(isOnline) {
@@ -71,12 +71,18 @@ export default class Main extends React.Component {
   }
   isDrivingHandler(isDriving) {
     this.setState({isDriving: isDriving}, () => {
-      const status = this.state.isDriving ? 'on_the_way' : 'rest';
+      const status = this.state.isDriving ? 'On the way' : 'Break';
       fetch(
         `http://www.webapiroads.somee.com/api/driver/${this.state.data.id}/setstatusdriver/${status}`,
+        {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        },
       )
         .then((response) => {
-          console.log(response);
           return response.json();
         })
         .then((json) => {
@@ -86,14 +92,46 @@ export default class Main extends React.Component {
         .catch((error) => {
           console.error(error);
         });
+      if (status === 'On the way') {
+        let startOfDay = moment().startOf('day');
+        let now = moment();
+        let diff = now.diff(startOfDay, 'seconds');
+
+        fetch(
+          `http://www.webapiroads.somee.com/api/driver/${this.state.data.id}/timesecondsdriver/${diff}`,
+          {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+          },
+        )
+          .then((response) => {
+            return response.json();
+          })
+          .then((json) => {
+            console.log('time-server-res', json, json.data);
+            return json.data;
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
     });
   }
-  sosHandler() {
+  exclusiveStatusHandler(status) {
     fetch(
-      `http://www.webapiroads.somee.com/api/driver/${this.state.data.id}/setstatusdriver/SOS`,
+      `http://www.webapiroads.somee.com/api/driver/${this.state.data.id}/setstatusdriver/${status}`,
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      },
     )
       .then((response) => {
-        console.log(response);
         return response.json();
       })
       .then((json) => {
@@ -174,8 +212,26 @@ export default class Main extends React.Component {
           />
         </View>
 
-        <TouchableOpacity style={styles.sosButton} onPress={this.sosHandler}>
+        <TouchableOpacity
+          style={styles.sosButton}
+          onPress={this.exclusiveStatusHandler('sos')}>
           <Text style={{fontSize: 24, color: '#ec4f43'}}>SOS</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.sosButton}
+          onPress={this.exclusiveStatusHandler('call me')}>
+          <Text style={{fontSize: 24, color: '#ec4f43'}}>
+            Запросить связь с диспетчером
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.sosButton}
+          onPress={this.exclusiveStatusHandler('unexpected')}>
+          <Text style={{fontSize: 24, color: '#ec4f43'}}>
+            Непредвиденная ситуация
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.footerDiv}>
