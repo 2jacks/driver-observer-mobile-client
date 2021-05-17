@@ -15,12 +15,7 @@ export default class Main extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      data: {
-        accessToken: null,
-        id: null,
-        email: null,
-        password: null,
-      },
+      data: this.props.route.params,
       personal: {},
 
       object: null,
@@ -41,7 +36,6 @@ export default class Main extends React.Component {
 
   isOnlineHandler(isOnline) {
     this.setState({isOnline: isOnline}, () => {
-      console.log('main-isOnline', this.state.isOnline);
       if (this.state.isOnline) {
         BackgroundGeolocation.start();
         fetch(
@@ -147,7 +141,6 @@ export default class Main extends React.Component {
   }
 
   componentDidMount() {
-    this.setState({data: this.props.route.params});
     BackgroundGeolocation.configure({
       desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
       stationaryRadius: 15,
@@ -163,7 +156,6 @@ export default class Main extends React.Component {
       activitiesInterval: 20000,
     });
     BackgroundGeolocation.on('location', (location) => {
-      console.log(location.latitude, location.longitude);
       this.setState({
         location: {latitude: location.latitude, longitude: location.longitude},
         route: [...this.state.route, location],

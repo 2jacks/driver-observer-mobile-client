@@ -7,15 +7,6 @@ export default class Map extends React.Component {
     super(props);
   }
 
-  componentDidUpdate(
-    prevProps: Readonly<P>,
-    prevState: Readonly<S>,
-    snapshot: SS,
-  ) {
-    console.log('Map is online', this.props.isOnline);
-    console.log('Map latlng', this.props.location);
-  }
-
   render() {
     return (
       <MapView
