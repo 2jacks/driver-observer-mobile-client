@@ -1,7 +1,10 @@
 import React from 'react';
-import {StyleSheet, View, TouchableOpacity, Text} from 'react-native';
+import {StyleSheet, View, TouchableOpacity, Image} from 'react-native';
 import moment from 'moment';
 import BackgroundGeolocation from '@mauron85/react-native-background-geolocation';
+import sosIcon from './sos.png';
+import supportIcon from './support.png';
+import unexpectedIcon from './exclamation.png';
 
 import Map from './Map';
 import OnlineStatusField from './OnlineStatusField';
@@ -211,27 +214,28 @@ export default class Main extends React.Component {
             route={this.state.route}
           />
         </View>
-
         <TouchableOpacity
           style={styles.sosButton}
-          onPress={this.exclusiveStatusHandler('sos')}>
-          <Text style={{fontSize: 24, color: '#ec4f43'}}>SOS</Text>
+          onPress={() => {
+            this.exclusiveStatusHandler('sos');
+          }}>
+          <Image source={sosIcon} style={styles.iconInButton} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.sosButton}
-          onPress={this.exclusiveStatusHandler('call me')}>
-          <Text style={{fontSize: 24, color: '#ec4f43'}}>
-            Запросить связь с диспетчером
-          </Text>
+          onPress={() => {
+            this.exclusiveStatusHandler('call me');
+          }}>
+          <Image source={supportIcon} style={styles.iconInButton} />
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.sosButton}
-          onPress={this.exclusiveStatusHandler('unexpected')}>
-          <Text style={{fontSize: 24, color: '#ec4f43'}}>
-            Непредвиденная ситуация
-          </Text>
+          onPress={() => {
+            this.exclusiveStatusHandler('unexpected');
+          }}>
+          <Image source={unexpectedIcon} style={styles.iconInButton} />
         </TouchableOpacity>
 
         <View style={styles.footerDiv}>
@@ -273,14 +277,21 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   sosButton: {
-    marginTop: 50,
+    marginTop: 30,
     marginLeft: 10,
     paddingHorizontal: 10,
     paddingVertical: 10,
     borderRadius: 30,
     backgroundColor: '#fff',
     elevation: 1,
-    width: 70,
+    width: 50,
+    height: 50,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconInButton: {
+    width: 40,
+    height: 40,
+    resizeMode: 'contain',
   },
 });
