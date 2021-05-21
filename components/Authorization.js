@@ -1,12 +1,11 @@
 import React, {useState} from 'react';
-import {StyleSheet, Text, View, TextInput, Button} from 'react-native';
+import {StyleSheet, Text, View, TextInput, Button, Alert} from 'react-native';
 
 export default function Authorization({navigation}) {
-  const [email, setEmail] = useState('essent1al26@yandex.ru');
-  const [password, setPassword] = useState('12345');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
   async function signInWithEmailAndPass() {
-    console.log(email, password);
     fetch('http://www.webapiroads.somee.com/api/account/login', {
       method: 'POST',
       headers: {
@@ -25,7 +24,6 @@ export default function Authorization({navigation}) {
         return res.json();
       })
       .then((data) => {
-        console.log(data.data);
         if (data.data.message === 'Авторизован') {
           navigation.navigate('Main', {
             accessToken: data.data.accessToken,
@@ -35,7 +33,7 @@ export default function Authorization({navigation}) {
           });
         }
       })
-      .catch((error) => console.log(error));
+      .catch((error) => Alert.alert(error));
   }
 
   return (
@@ -47,7 +45,7 @@ export default function Authorization({navigation}) {
         <View style={styles.container}>
           <TextInput
             style={styles.authTextInput}
-            onChangeText={(email) => setEmail(email)}
+            onChangeText={(em) => setEmail(em)}
             placeholder={'Email'}
             value={email}
           />

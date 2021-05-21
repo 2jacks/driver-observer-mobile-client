@@ -1,6 +1,6 @@
 import React from 'react';
-import {StyleSheet, View, TouchableOpacity, Image} from 'react-native';
-import moment from 'moment';
+import {StyleSheet, View, TouchableOpacity, Image, Alert} from 'react-native';
+// import moment from 'moment';
 import BackgroundGeolocation from '@mauron85/react-native-background-geolocation';
 import sosIcon from './sos.png';
 import supportIcon from './support.png';
@@ -22,13 +22,13 @@ export default class Main extends React.Component {
 
       isOnline: false,
       isDriving: false,
+      drivingTime: 0,
       location: {
         longitude: 0,
         latitude: 0,
       },
       route: [],
     };
-
     this.isOnlineHandler = this.isOnlineHandler.bind(this);
     this.isDrivingHandler = this.isDrivingHandler.bind(this);
     this.exclusiveStatusHandler = this.exclusiveStatusHandler.bind(this);
@@ -43,29 +43,36 @@ export default class Main extends React.Component {
         )
           .then((response) => response.json())
           .then((json) => {
-            console.log('isonline-server-res', json.data);
             return json.data;
           })
           .catch((error) => {
-            console.error(error);
+            Alert.alert(error);
           });
       }
       if (!this.state.isOnline) {
         BackgroundGeolocation.stop();
+
+        this.drivingTime = 0;
+        clearInterval(this.drivingCounter);
+        clearInterval(this.sendDrivingTime);
+
         fetch(
           `http://www.webapiroads.somee.com/api/account/${this.state.data.id}/setonline/false`,
         )
           .then((response) => response.json())
           .then((json) => {
-            console.log('isonline-server-res', json.data);
             return json.data;
           })
           .catch((error) => {
-            console.error(error);
+            Alert.alert(error);
           });
       }
     });
   }
+  drivingTime = 0;
+  drivingCounter;
+  sendDrivingTime;
+
   isDrivingHandler(isDriving) {
     this.setState({isDriving: isDriving}, () => {
       const status = this.state.isDriving ? 'On the way' : 'Break';
@@ -83,37 +90,41 @@ export default class Main extends React.Component {
           return response.json();
         })
         .then((json) => {
-          console.log('status-server-res', json, json.data);
           return json.data;
         })
         .catch((error) => {
-          console.error(error);
+          Alert.alert(error);
         });
       if (status === 'On the way') {
-        let startOfDay = moment().startOf('day');
-        let now = moment();
-        let diff = now.diff(startOfDay, 'seconds');
-
-        fetch(
-          `http://www.webapiroads.somee.com/api/driver/${this.state.data.id}/timesecondsdriver/${diff}`,
-          {
-            method: 'POST',
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
+        this.drivingCounter = setInterval(() => {
+          this.drivingTime++;
+        }, 1000);
+        this.sendDrivingTime = setInterval(() => {
+          fetch(
+            `http://www.webapiroads.somee.com/api/driver/${this.state.data.id}/timesecondsdriver/${this.drivingTime}`,
+            {
+              method: 'POST',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+              },
             },
-          },
-        )
-          .then((response) => {
-            return response.json();
-          })
-          .then((json) => {
-            console.log('time-server-res', json, json.data);
-            return json.data;
-          })
-          .catch((error) => {
-            console.error(error);
-          });
+          )
+            .then((response) => {
+              return response.json();
+            })
+            .then((json) => {
+              return json.data;
+            })
+            .catch((error) => {
+              Alert.alert(error);
+            });
+        }, 10000);
+      }
+      if (status === 'Break') {
+        clearInterval(this.drivingCounter);
+        clearInterval(this.sendDrivingTime);
+        this.drivingTime = 0;
       }
     });
   }
@@ -132,20 +143,19 @@ export default class Main extends React.Component {
         return response.json();
       })
       .then((json) => {
-        console.log('status-server-res', json, json.data);
         return json.data;
       })
       .catch((error) => {
-        console.error(error);
+        Alert.alert(error);
       });
   }
 
   componentDidMount() {
     BackgroundGeolocation.configure({
       desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
-      stationaryRadius: 15,
-      distanceFilter: 15,
-      notificationTitle: 'Driver Distance Short',
+      stationaryRadius: 5,
+      distanceFilter: 10,
+      notificationTitle: 'Driver Activity',
       notificationText: 'Пока вы на смене - ваше местоположение отслеживается',
       debug: false,
       startOnBoot: false,
@@ -153,7 +163,7 @@ export default class Main extends React.Component {
       locationProvider: BackgroundGeolocation.DISTANCE_FILTER_PROVIDER,
       interval: 5000,
       fastestInterval: 5000,
-      activitiesInterval: 20000,
+      activitiesInterval: 60000,
     });
     BackgroundGeolocation.on('location', (location) => {
       this.setState({
@@ -186,6 +196,9 @@ export default class Main extends React.Component {
   componentWillUnmount() {
     BackgroundGeolocation.stop();
     BackgroundGeolocation.removeAllListeners();
+
+    clearInterval(this.drivingCounter);
+    clearInterval(this.sendDrivingTime);
   }
 
   render() {
