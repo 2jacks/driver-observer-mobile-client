@@ -1,7 +1,8 @@
 import React from 'react';
 import {StyleSheet, View, TouchableOpacity, Image, Alert} from 'react-native';
-// import moment from 'moment';
-import BackgroundGeolocation from '@mauron85/react-native-background-geolocation';
+
+import Geolocation from 'react-native-geolocation-service';
+
 import sosIcon from './sos.png';
 import supportIcon from './support.png';
 import unexpectedIcon from './exclamation.png';
@@ -28,47 +29,13 @@ export default class Main extends React.Component {
         latitude: 0,
       },
       route: [],
+      watchId: null,
     };
     this.isOnlineHandler = this.isOnlineHandler.bind(this);
     this.isDrivingHandler = this.isDrivingHandler.bind(this);
     this.exclusiveStatusHandler = this.exclusiveStatusHandler.bind(this);
   }
 
-  isOnlineHandler(isOnline) {
-    this.setState({isOnline: isOnline}, () => {
-      if (this.state.isOnline) {
-        BackgroundGeolocation.start();
-        fetch(
-          `http://www.webapiroads.somee.com/api/account/${this.state.data.id}/setonline/true`,
-        )
-          .then((response) => response.json())
-          .then((json) => {
-            return json.data;
-          })
-          .catch((error) => {
-            Alert.alert(error);
-          });
-      }
-      if (!this.state.isOnline) {
-        BackgroundGeolocation.stop();
-
-        this.drivingTime = 0;
-        clearInterval(this.drivingCounter);
-        clearInterval(this.sendDrivingTime);
-
-        fetch(
-          `http://www.webapiroads.somee.com/api/account/${this.state.data.id}/setonline/false`,
-        )
-          .then((response) => response.json())
-          .then((json) => {
-            return json.data;
-          })
-          .catch((error) => {
-            Alert.alert(error);
-          });
-      }
-    });
-  }
   drivingTime = 0;
   drivingCounter;
   sendDrivingTime;
@@ -150,52 +117,84 @@ export default class Main extends React.Component {
       });
   }
 
-  componentDidMount() {
-    BackgroundGeolocation.configure({
-      desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
-      stationaryRadius: 5,
-      distanceFilter: 10,
-      notificationTitle: 'Driver Activity',
-      notificationText: 'Пока вы на смене - ваше местоположение отслеживается',
-      debug: false,
-      startOnBoot: false,
-      stopOnTerminate: true,
-      locationProvider: BackgroundGeolocation.DISTANCE_FILTER_PROVIDER,
-      interval: 5000,
-      fastestInterval: 5000,
-      activitiesInterval: 60000,
-    });
-    BackgroundGeolocation.on('location', (location) => {
-      this.setState({
-        location: {latitude: location.latitude, longitude: location.longitude},
-        route: [...this.state.route, location],
-      });
-      fetch(
-        `http://www.webapiroads.somee.com/api/routes/getroute?driverId=${this.state.data.id}`,
-      )
-        .then((res) => {
-          return res.json();
-        })
-        .then((data) => {
-          fetch('http://www.webapiroads.somee.com/api/routes/insertpoint', {
-            method: 'POST',
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              RouteId: data.id,
-              lat: location.latitude,
-              lng: location.longitude,
-              speed: location.speed,
-            }),
+  isOnlineHandler(isOnline) {
+    this.setState({isOnline: isOnline}, () => {
+      if (this.state.isOnline) {
+        let watchId = Geolocation.watchPosition(
+          (location) => {
+            this.setState({
+              location: {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              },
+              route: [...this.state.route, location.coords],
+            });
+            fetch(
+              `http://www.webapiroads.somee.com/api/routes/getroute?driverId=${this.state.data.id}`,
+            )
+              .then((res) => {
+                return res.json();
+              })
+              .then((data) => {
+                fetch(
+                  'http://www.webapiroads.somee.com/api/routes/insertpoint',
+                  {
+                    method: 'POST',
+                    headers: {
+                      Accept: 'application/json',
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      RouteId: data.id,
+                      lat: location.coords.latitude,
+                      lng: location.coords.longitude,
+                      speed: location.coords.speed,
+                    }),
+                  },
+                ).error((err) => Alert.alert(err));
+              });
+          },
+          (error) => {
+            // See error code charts below.
+            console.log(error.code, error.message);
+          },
+          {enableHighAccuracy: true, distanceFilter: 20},
+        );
+        this.setState({watchId: watchId});
+        fetch(
+          `http://www.webapiroads.somee.com/api/account/${this.state.data.id}/setonline/true`,
+        )
+          .then((response) => response.json())
+          .then((json) => {
+            return json.data;
+          })
+          .catch((error) => {
+            Alert.alert(error);
           });
-        });
+      }
+      if (!this.state.isOnline) {
+        Geolocation.clearWatch(this.state.watchId);
+
+        this.drivingTime = 0;
+        clearInterval(this.drivingCounter);
+        clearInterval(this.sendDrivingTime);
+
+        fetch(
+          `http://www.webapiroads.somee.com/api/account/${this.state.data.id}/setonline/false`,
+        )
+          .then((response) => response.json())
+          .then((json) => {
+            return json.data;
+          })
+          .catch((error) => {
+            Alert.alert(error);
+          });
+      }
     });
   }
+
   componentWillUnmount() {
-    BackgroundGeolocation.stop();
-    BackgroundGeolocation.removeAllListeners();
+    Geolocation.stopObserving();
 
     clearInterval(this.drivingCounter);
     clearInterval(this.sendDrivingTime);

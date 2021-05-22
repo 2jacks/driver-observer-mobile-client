@@ -2,8 +2,8 @@ import React, {useState} from 'react';
 import {StyleSheet, Text, View, TextInput, Button, Alert} from 'react-native';
 
 export default function Authorization({navigation}) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('essent1al26@yandex.ru');
+  const [password, setPassword] = useState('12345');
 
   async function signInWithEmailAndPass() {
     fetch('http://www.webapiroads.somee.com/api/account/login', {
@@ -45,17 +45,14 @@ export default function Authorization({navigation}) {
         <View style={styles.container}>
           <TextInput
             style={styles.authTextInput}
-            onChangeText={(em) => {
-              setEmail(em);
-              console.log(email);
-            }}
-            placeholder={'Email'}
+            onChangeText={(em) => setEmail(em)}
+            placeholder={'E-mail'}
             value={email}
           />
           <TextInput
             style={styles.authTextInput}
             onChangeText={(pass) => setPassword(pass)}
-            placeholder={'Password'}
+            placeholder={'Пароль'}
             value={password}
           />
           <View style={styles.authButtonWrapper}>
