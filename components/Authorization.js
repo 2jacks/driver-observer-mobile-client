@@ -45,7 +45,10 @@ export default function Authorization({navigation}) {
         <View style={styles.container}>
           <TextInput
             style={styles.authTextInput}
-            onChangeText={(em) => setEmail(em)}
+            onChangeText={(em) => {
+              setEmail(em);
+              console.log(email);
+            }}
             placeholder={'Email'}
             value={email}
           />
@@ -57,7 +60,6 @@ export default function Authorization({navigation}) {
           />
           <View style={styles.authButtonWrapper}>
             <Button
-              style={styles.authButton}
               title={'Войти'}
               onPress={signInWithEmailAndPass}
               color={'#FE7968'}
